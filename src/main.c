@@ -8,13 +8,13 @@
 #include "menu.h"
 
 #define MAX_OBS 64
-#define LANE_X(i) ( (1-i) * 2.5f )
+#define LANE_X(i) ( (1-i) * 2.5f ) // lanes: 0,1,2 -> x = -2.5,0,2.5
 #define GRAVITY -30.0f
 
 typedef enum { P_RUNNING, P_JUMPING, P_SLIDING } PlayerState;
 
 typedef struct {
-    int lane;
+    int lane; // 0..2
     float x,y,z;
     float vy;
     PlayerState state;
@@ -28,18 +28,27 @@ typedef struct {
     float w,h,d;
 } Obstacle;
 
+/* Globals */
 Player player;
 Obstacle obsPool[MAX_OBS];
 
-float worldSpeed = 12.0f;
+float worldSpeed = 12.0f; // units per second, increases with time
 float spawnTimer = 0.0f;
 float spawnInterval = 1.0f;
 
+/* Prototypes */
+void resetGame();
+void spawnObstacle();
+int aabbCollision(float ax, float ay, float az, float aw, float ah, float ad,
+                  float bx, float by, float bz, float bw, float bh, float bd);
+
+/* Timer callback end of slide */
 void endSlide(int value) {
     player.height = 2.0f;
     player.state = P_RUNNING;
 }
 
+/* Reset game state */
 void resetGame() {
     player.lane = 1; player.x = LANE_X(1); player.y = 0; player.z = 0;
     player.vy = 0; player.state = P_RUNNING;
@@ -47,8 +56,10 @@ void resetGame() {
     for(int i=0;i<MAX_OBS;i++) obsPool[i].active = 0;
     worldSpeed = 12.0f;
     spawnTimer = 0.0f;
+    spawnInterval = 1.0f;
 }
 
+/* Spawn obstacle in a free pool slot */
 void spawnObstacle() {
     for(int i=0;i<MAX_OBS;i++){
         if(!obsPool[i].active){
@@ -63,6 +74,7 @@ void spawnObstacle() {
     }
 }
 
+/* AABB collision test (centered boxes) */
 int aabbCollision(float ax, float ay, float az, float aw, float ah, float ad,
                   float bx, float by, float bz, float bw, float bh, float bd) {
     if (fabs(ax - bx) * 2.0f < (aw + bw) &&
@@ -71,18 +83,24 @@ int aabbCollision(float ax, float ay, float az, float aw, float ah, float ad,
     return 0;
 }
 
+/* Update game logic (called each frame with dt) */
 void update(float dt) {
     if(modoAtual != MODO_JOGO) return;
 
+    // speed up slowly
     worldSpeed += dt * 0.5f;
+
+    // snap to lane (could be smoothed)
     player.x = LANE_X(player.lane);
 
+    // jump physics
     if(player.state == P_JUMPING) {
         player.vy += GRAVITY * dt;
         player.y += player.vy * dt;
         if(player.y <= 0.0f) { player.y = 0.0f; player.vy = 0.0f; player.state = P_RUNNING; }
     }
 
+    // move obstacles toward player
     for(int i=0;i<MAX_OBS;i++){
         if(!obsPool[i].active) continue;
         obsPool[i].z -= worldSpeed * dt;
@@ -97,72 +115,94 @@ void update(float dt) {
         }
     }
 
+    // spawn logic
     spawnTimer += dt;
     if(spawnTimer >= spawnInterval) {
         spawnTimer = 0;
         spawnObstacle();
         spawnInterval = 0.8f - fmin(0.5f, worldSpeed * 0.01f);
+        if(spawnInterval < 0.25f) spawnInterval = 0.25f;
     }
 }
 
+/* Draw helper: scaled cube centered at x,y,z (y is base)
+   We translate to (x, y + sy*0.5f, z) before scaling cube(1).
+*/
 void drawCube(float x, float y, float z, float sx, float sy, float sz) {
     glPushMatrix();
-    glTranslatef(x,y+sy*0.5f,z);
-    glScalef(sx,sy,sz);
+    glTranslatef(x, y + sy * 0.5f, z);
+    glScalef(sx, sy, sz);
     glutSolidCube(1.0f);
     glPopMatrix();
 }
 
+/* Render scene: if menu -> call desenhaMenu (which does its own swapbuffers),
+   otherwise draw 3D world (and swapbuffers here).
+*/
 void renderScene() {
     if(modoAtual == MODO_MENU) {
+        // menu handles its own projection and swapbuffers
         desenhaMenu();
         return;
     }
 
+    // 3D game rendering
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
+    // Camera: behind and above the player, looking forward
     float camX = player.x;
-    float camY = 3.0f;
-    float camZpos = player.z - 6.0f;
-    gluLookAt(camX, camY, camZpos, player.x, 1.0f, player.z+6.0f, 0,1,0);
+    float camY = 4.0f;
+    float camZ = player.z - 8.0f;
+    gluLookAt(camX, camY, camZ,    // eye
+              player.x, 1.0f, player.z + 8.0f, // center (look ahead)
+              0.0f, 1.0f, 0.0f);   // up
 
+    // ground plane (simple)
+    glDisable(GL_LIGHTING);
     for(int i=0;i<60;i++){
-        glPushMatrix();
-        glTranslatef(0, -0.01f, i*5.0f - fmodf((float)time(NULL),5.0f)*0 );
+        float zpos = i*5.0f - fmodf((float)time(NULL),5.0f)*0.0f;
         glBegin(GL_QUADS);
-        glColor3f(0.2f,0.6f,0.2f);
-        glVertex3f(-10, 0, i*5 - 50);
-        glVertex3f(10, 0, i*5 - 50);
-        glVertex3f(10, 0, i*5 - 49.5);
-        glVertex3f(-10, 0, i*5 - 49.5);
+        glColor3f(0.15f, 0.55f, 0.15f);
+        glVertex3f(-10.0f, 0.0f, zpos - 50.0f);
+        glVertex3f(10.0f, 0.0f, zpos - 50.0f);
+        glVertex3f(10.0f, 0.0f, zpos - 49.5f);
+        glVertex3f(-10.0f, 0.0f, zpos - 49.5f);
         glEnd();
-        glPopMatrix();
     }
+    glEnable(GL_LIGHTING);
 
+    // player (blue)
     glColor3f(0.1f,0.4f,0.9f);
     drawCube(player.x, player.y, player.z, player.width, player.height, player.depth);
 
+    // obstacles (red)
     glColor3f(0.9f,0.2f,0.2f);
     for(int i=0;i<MAX_OBS;i++){
         if(!obsPool[i].active) continue;
         drawCube(obsPool[i].x, obsPool[i].y, obsPool[i].z, obsPool[i].w, obsPool[i].h, obsPool[i].d);
     }
 
-    if(modoAtual == MODO_GAMEOVER){
+    // UI overlays (2D) - Game Over text if needed
+    if(modoAtual == MODO_GAMEOVER) {
         int w = glutGet(GLUT_WINDOW_WIDTH), h = glutGet(GLUT_WINDOW_HEIGHT);
-
         glMatrixMode(GL_PROJECTION);
-        glPushMatrix(); glLoadIdentity();
-        gluOrtho2D(0,w,0,h);
+        glPushMatrix();
+        glLoadIdentity();
+        gluOrtho2D(0, w, 0, h);
 
         glMatrixMode(GL_MODELVIEW);
-        glPushMatrix(); glLoadIdentity();
+        glPushMatrix();
+        glLoadIdentity();
 
+        glDisable(GL_LIGHTING);
         glColor3f(1,1,1);
         glRasterPos2i(w/2 - 80, h/2);
-        const char *s = "GAME OVER - R to restart";
-        for(const char *c=s; *c; c++) glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
+        const char *s = "GAME OVER - Press R to return";
+        for(const char *c = s; *c; ++c) glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
+        glEnable(GL_LIGHTING);
 
         glPopMatrix();
         glMatrixMode(GL_PROJECTION);
@@ -173,26 +213,31 @@ void renderScene() {
     glutSwapBuffers();
 }
 
+/* Idle / timing */
 void idleCB() {
-    static float last = 0;
+    static float last = 0.0f;
     float now = glutGet(GLUT_ELAPSED_TIME) / 1000.0f;
-    if(last == 0) last = now;
+    if(last == 0.0f) last = now;
     float dt = now - last;
     last = now;
     update(dt);
     glutPostRedisplay();
 }
 
+/* Mouse callback routes to menu when in menu */
 void mouseCB(int button, int state, int x, int y) {
     if(modoAtual == MODO_MENU) cliqueMenu(button, state, x, y);
 }
 
+/* Keyboard */
 void keyboardCB(unsigned char key, int x, int y) {
-    if(key == 27) exit(0);
-    if(modoAtual == MODO_GAMEOVER && (key=='r'||key=='R')) {
+    if(key == 27) exit(0); // ESC quits
+
+    if(modoAtual == MODO_GAMEOVER && (key == 'r' || key == 'R')) {
         modoAtual = MODO_MENU;
         return;
     }
+
     if(modoAtual != MODO_JOGO) return;
 
     if(key == 'w' || key == ' ') {
@@ -200,7 +245,7 @@ void keyboardCB(unsigned char key, int x, int y) {
             player.state = P_JUMPING;
             player.vy = 12.0f;
         }
-    } else if(key == 's') {
+    } else if(key == 's' || key == 'S') {
         if(player.state == P_RUNNING) {
             player.state = P_SLIDING;
             player.height = 1.0f;
@@ -209,34 +254,67 @@ void keyboardCB(unsigned char key, int x, int y) {
     }
 }
 
+/* Special keys - lane switching */
 void specialCB(int key, int x, int y) {
     if(modoAtual != MODO_JOGO) return;
     if(key == GLUT_KEY_LEFT && player.lane > 0) player.lane--;
     else if(key == GLUT_KEY_RIGHT && player.lane < 2) player.lane++;
 }
 
+/* Window reshape: sets perspective projection for 3D */
 void reshape(int w, int h) {
-    if(h==0) h=1;
+    if(h == 0) h = 1;
     glViewport(0,0,w,h);
+
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(60.0, (float)w/(float)h, 0.1, 200.0);
+    gluPerspective(60.0, (float)w / (float)h, 0.1, 200.0);
+
     glMatrixMode(GL_MODELVIEW);
 }
 
+/* Initialization: lighting, depth test, etc. */
+void initGL() {
+    glClearColor(0.12f, 0.12f, 0.15f, 1.0f);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+
+    // Simple lighting for 3D feel
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    GLfloat light_ambient[]  = { 0.2f, 0.2f, 0.2f, 1.0f };
+    GLfloat light_diffuse[]  = { 0.9f, 0.9f, 0.9f, 1.0f };
+    GLfloat light_specular[] = { 0.9f, 0.9f, 0.9f, 1.0f };
+    GLfloat light_position[] = { 5.0f, 10.0f, 5.0f, 1.0f };
+
+    glLightfv(GL_LIGHT0, GL_AMBIENT,  light_ambient);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE,  light_diffuse);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
+    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+
+    // Material
+    GLfloat mat_ambient[]    = { 0.3f, 0.3f, 0.3f, 1.0f };
+    GLfloat mat_diffuse[]    = { 0.6f, 0.6f, 0.6f, 1.0f };
+    GLfloat mat_specular[]   = { 0.8f, 0.8f, 0.8f, 1.0f };
+    GLfloat high_shininess[] = { 50.0f };
+    glMaterialfv(GL_FRONT, GL_AMBIENT,   mat_ambient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE,   mat_diffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR,  mat_specular);
+    glMaterialfv(GL_FRONT, GL_SHININESS, high_shininess);
+}
+
+/* Main */
 int main(int argc, char** argv) {
     srand((unsigned)time(NULL));
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
     glutInitWindowSize(1024, 600);
-    glutCreateWindow("Simple 3D Runner - Prototype");
+    glutCreateWindow("Protótipo");
 
-    glClearColor(0.2f, 0.2f, 0.25f, 1.0f);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-
-    resetGame(); // inicializa dados do jogo (modo inicial vem de estado.c)
+    initGL();
+    resetGame(); // set initial values (modoAtual já vem de estado.c como MODO_MENU)
 
     glutDisplayFunc(renderScene);
     glutIdleFunc(idleCB);
