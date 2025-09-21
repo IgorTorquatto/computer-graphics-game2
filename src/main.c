@@ -6,9 +6,10 @@
 #include <time.h>
 #include "estado.h"
 #include "menu.h"
+#include "model.h" // Incluído para carregar e desenhar o modelo OBJ
 
 #define MAX_OBS 64
-#define LANE_X(i) (i * 2.5f ) // lanes: 0,1,2 -> x = -2.5,0,2.5
+#define LANE_X(i) (i * 2.5f) // lanes: 0,1,2 -> x = -2.5,0,2.5
 #define GRAVITY -30.0f
 
 typedef enum { P_RUNNING, P_JUMPING, P_SLIDING } PlayerState;
@@ -36,6 +37,10 @@ float worldSpeed = 12.0f; // units per second, increases with time
 float spawnTimer = 0.0f;
 float spawnInterval = 1.0f;
 
+Model obstacleModel; // Modelo carregado para os obstáculos
+float escalaObstaculo = 1.0f; // escala para o obstáculo
+
+
 /* Prototypes */
 void resetGame();
 void spawnObstacle();
@@ -44,60 +49,58 @@ int aabbCollision(float ax, float ay, float az, float aw, float ah, float ad,
 
 void mostrarEixos(){
 
-	//CODIGO PARA TER REFERENCIA DOS EIXOS
+    glDisable(GL_LIGHTING); // Cor pura
+    glDisable(GL_DEPTH_TEST); // Evita clipping
 
-	glDisable(GL_LIGHTING); // Cor pura
-	glDisable(GL_DEPTH_TEST); // Evita clipping
+    // Eixo X (vermelho): -10 a 10
+    glLineWidth(2.0f);
+    glBegin(GL_LINES);
+    glColor3f(1.0f, 0.0f, 0.0f); // Vermelho
+    glVertex3f(-10.0f, 0.1f, 0.0f);
+    glVertex3f(10.0f, 0.1f, 0.0f);
+    glEnd();
 
-	// Eixo X (vermelho): -10 a 10
-	glLineWidth(2.0f);
-	glBegin(GL_LINES);
-	glColor3f(1.0f, 0.0f, 0.0f); // Vermelho
-	glVertex3f(-10.0f, 0.1f, 0.0f); // Ligeiramente acima (y=0.1) para evitar z-fighting
-	glVertex3f(10.0f, 0.1f, 0.0f);
-	glEnd();
+    // Marcadores num ricos no eixo X
+    glColor3f(1.0f, 1.0f, 1.0f);
+    for(int x = -10; x <= 10; x += 5) {
+        glRasterPos3f(x, 0.2f, 0.0f);
+        char label[10];
+        snprintf(label, 10, "%d", x);
+        for(const char *c = label; *c; ++c) glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, *c);
+    }
 
-	// Marcadores numï¿½ricos no eixo X
-	glColor3f(1.0f, 1.0f, 1.0f); // Branco para texto
-	for(int x = -10; x <= 10; x += 5) { // Marcadores a cada 5 unidades
-		glRasterPos3f(x, 0.2f, 0.0f); // Posiï¿½ï¿½o do texto
-		char label[10];
-		snprintf(label, 10, "%d", x);
-		for(const char *c = label; *c; ++c) glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, *c);
-	}
+    // Eixo Y (verde): 0 a 5
+    glBegin(GL_LINES);
+    glColor3f(0.0f, 1.0f, 0.0f);
+    glVertex3f(0.0f, 0.0f, 0.0f);
+    glVertex3f(0.0f, 5.0f, 0.0f);
+    glEnd();
 
-	// Eixo Y (verde): 0 a 5
-	glBegin(GL_LINES);
-	glColor3f(0.0f, 1.0f, 0.0f); // Verde
-	glVertex3f(0.0f, 0.0f, 0.0f);
-	glVertex3f(0.0f, 5.0f, 0.0f);
-	glEnd();
+    // Marcadores no eixo Y
+    for(int y = 0; y <= 5; y += 1) {
+        glRasterPos3f(0.2f, y, 0.0f);
+        char label[10];
+        snprintf(label, 10, "%d", y);
+        for(const char *c = label; *c; ++c) glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, *c);
+    }
 
-	// Marcadores no eixo Y
-	for(int y = 0; y <= 5; y += 1) {
-		glRasterPos3f(0.2f, y, 0.0f);
-		char label[10];
-		snprintf(label, 10, "%d", y);
-		for(const char *c = label; *c; ++c) glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, *c);
-	}
+    // Eixo Z (azul): -20 a 20
+    glBegin(GL_LINES);
+    glColor3f(0.0f, 0.0f, 1.0f);
+    glVertex3f(0.0f, 0.1f, -20.0f);
+    glVertex3f(0.0f, 0.1f, 20.0f);
+    glEnd();
 
-	// Eixo Z (azul): -20 a 20
-	glBegin(GL_LINES);
-	glColor3f(0.0f, 0.0f, 1.0f); // Azul
-	glVertex3f(0.0f, 0.1f, -20.0f);
-	glVertex3f(0.0f, 0.1f, 20.0f);
-	glEnd();
+    // Marcadores no eixo Z
+    for(int z = -20; z <= 20; z += 5) {
+        glRasterPos3f(0.2f, 0.2f, z);
+        char label[10];
+        snprintf(label, 10, "%d", z);
+        for(const char *c = label; *c; ++c) glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, *c);
+    }
 
-	// Marcadores no eixo Z
-	for(int z = -20; z <= 20; z += 5) {
-		glRasterPos3f(0.2f, 0.2f, z);
-		char label[10];
-		snprintf(label, 10, "%d", z);
-		for(const char *c = label; *c; ++c) glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, *c);
-	}
-
-	glEnable(GL_DEPTH_TEST); // Reativa
-	glEnable(GL_LIGHTING); // Reativa
+    glEnable(GL_DEPTH_TEST); // Reativa
+    glEnable(GL_LIGHTING); // Reativa
 }
 
 /* Timer callback end of slide */
@@ -194,81 +197,82 @@ void drawCube(float x, float y, float z, float sx, float sy, float sz) {
     glPopMatrix();
 }
 
+/* Draw the loaded OBJ model as points (simple) */
+void drawModel(const Model* model); // Prototype from model.h included
+
 /* Render scene: if menu -> call desenhaMenu (which does its own swapbuffers),
    otherwise draw 3D world (and swapbuffers here).
 */
 void renderScene() {
     if(modoAtual == MODO_MENU) {
-        // menu handles its own projection and swapbuffers
         desenhaMenu();
         return;
     }
 
-    // 3D game rendering
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    /*
-    // Camera: behind and above the player, looking forward
-    float camX = player.x - 2.2f;
-    float camY = 3.0f;
-    float camZ = player.z - 8.0f;
-    gluLookAt(camX, camY, camZ,    // eye
-              player.x, 1.0f, player.z + 8.0f, // center (look ahead)
-              0.0f, 1.0f, 0.0f);   // up
-	*/
-
-	// Camera: behind and above the player, looking forward
+    // Camera: atrás e acima do jogador, olhando para frente
     float camX = player.x;
     float camY = 4.0f;
     float camZ = player.z + 8.0f;
-    gluLookAt(camX, camY, camZ,    // eye
-              player.x, 1.0f, player.z - 8.0f, // center (look ahead)
-              0.0f, 1.0f, 0.0f);   // up
+    gluLookAt(camX, camY, camZ,
+              player.x, 1.0f, player.z - 8.0f,
+              0.0f, 1.0f, 0.0f);
 
+    mostrarEixos();
 
-
-	mostrarEixos();
-
-
-    // Reposition light relative to player (fixes strange lighting)
     GLfloat light_position[] = { player.x + 5.0f, 10.0f, player.z + 5.0f, 1.0f };
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 
-    // Enable color material (fixes gray washout)
     glEnable(GL_COLOR_MATERIAL);
     glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
 
-    // ground plane (melhorado: mais quads, cor mais clara, cobertura infinita)
-	glDisable(GL_LIGHTING);
-	glColor3f(0.9f, 0.9f, 0.9f); // Verde mais vivo para visibilidade
-	for(int i = -100; i < 100; i++) { // 200 quads, cobre -500 a 500 em Z
-    float zpos = i * 5.0f;
-    glBegin(GL_QUADS);
-    glVertex3f(-1.5f, 0.0f, zpos);       // Mais largo (-15 a 15 em X)
-    glVertex3f(6.5f, 0.0f, zpos);
-    glVertex3f(6.5f, 0.0f, zpos - 5.0f);
-    glVertex3f(-1.5f, 0.0f, zpos - 5.0f);
-    glEnd();
-}
-glEnable(GL_LIGHTING);
+    // Chão
+    glDisable(GL_LIGHTING);
+    glColor3f(0.9f, 0.9f, 0.9f);
+    for(int i = -100; i < 100; i++) {
+        float zpos = i * 5.0f;
+        glBegin(GL_QUADS);
+            glVertex3f(-1.5f, 0.0f, zpos);
+            glVertex3f(6.5f, 0.0f, zpos);
+            glVertex3f(6.5f, 0.0f, zpos - 5.0f);
+            glVertex3f(-1.5f, 0.0f, zpos - 5.0f);
+        glEnd();
+    }
+    glEnable(GL_LIGHTING);
 
-    // player (blue, now vibrant)
-    glColor3f(0.1f,0.4f,0.9f);
+    // Jogador (cubo azul)
+    glColor3f(0.1f, 0.4f, 0.9f);
     drawCube(player.x, player.y, player.z, player.width, player.height, player.depth);
 
-    // obstacles (red, now vibrant)
-    glColor3f(0.9f,0.2f,0.2f);
-    for(int i=0; i<MAX_OBS; i++){
-        if(!obsPool[i].active) continue;
-        drawCube(obsPool[i].x, obsPool[i].y, obsPool[i].z, obsPool[i].w, obsPool[i].h, obsPool[i].d);
-    }
+    // Obstáculos usando modelo OBJ
+	glColor3f(0.9f, 0.2f, 0.2f);
+	for(int i=0; i<MAX_OBS; i++){
+		if(!obsPool[i].active) continue;
+		glPushMatrix();
+		glTranslatef(obsPool[i].x, obsPool[i].y, obsPool[i].z);
 
-    // UI overlays (2D) - Game Over text if needed
+		// Ajuste para corrigir a posição vertical (suba ou desça conforme necessário)
+		float deslocamentoY = 0.50f; // exemplo: sobe 0.5 unidades acima do chão
+		glTranslatef(0.0f, deslocamentoY, 0.0f);
+
+		glRotatef(90.0f, 1.0f, 0.0f, 0.0f);   // Deita o modelo para ficar em pé
+		glRotatef(180.0f, 0.0f, 1.0f, 0.0f); // Gira para olhar para frente
+		glRotatef(180.0f, 0.0f, 0.0f, 1.0f); // Gira 180 graus no eixo Z para virar atrás
+
+		glScalef(escalaObstaculo, escalaObstaculo, escalaObstaculo);
+		drawModel(&obstacleModel);
+		glPopMatrix();
+	}
+
+
+    // Tela de Game Over
     if(modoAtual == MODO_GAMEOVER) {
         int w = glutGet(GLUT_WINDOW_WIDTH), h = glutGet(GLUT_WINDOW_HEIGHT);
+
         glMatrixMode(GL_PROJECTION);
         glPushMatrix();
         glLoadIdentity();
@@ -294,6 +298,7 @@ glEnable(GL_LIGHTING);
     glutSwapBuffers();
 }
 
+
 /* Idle / timing */
 void idleCB() {
     static float last = 0.0f;
@@ -312,7 +317,7 @@ void mouseCB(int button, int state, int x, int y) {
 
 /* Keyboard */
 void keyboardCB(unsigned char key, int x, int y) {
-    if(key == 27) exit(0); // ESC quits
+    if(key == 27) exit(0);
 
     if(modoAtual == MODO_GAMEOVER && (key == 'r' || key == 'R')) {
         modoAtual = MODO_MENU;
@@ -350,7 +355,7 @@ void keyboardCB(unsigned char key, int x, int y) {
             player.lane++;
         }
         break;
-	}
+    }
 }
 
 /* Special keys - lane switching */
@@ -381,7 +386,7 @@ void specialCB(int key, int x, int y) {
             glutTimerFunc(600, endSlide, 0);
         }
         break;
-	}
+    }
 }
 
 /* Window reshape: sets perspective projection for 3D */
@@ -404,7 +409,6 @@ void initGL() {
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
-    // Simple lighting for 3D feel
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
     GLfloat light_ambient[]  = { 0.2f, 0.2f, 0.2f, 1.0f };
@@ -417,7 +421,6 @@ void initGL() {
     glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 
-    // Material
     GLfloat mat_ambient[]    = { 0.3f, 0.3f, 0.3f, 1.0f };
     GLfloat mat_diffuse[]    = { 0.6f, 0.6f, 0.6f, 1.0f };
     GLfloat mat_specular[]   = { 0.8f, 0.8f, 0.8f, 1.0f };
@@ -434,10 +437,19 @@ int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
     glutInitWindowSize(1024, 600);
-    glutCreateWindow("Protï¿½tipo");
+    glutCreateWindow("Prot tipo");
 
     initGL();
-    resetGame(); // set initial values (modoAtual jï¿½ vem de estado.c como MODO_MENU)
+    resetGame();
+
+    // Carrega modelo de obstáculo OBJ
+    if(!loadOBJ("cat.obj", &obstacleModel)) {
+    fprintf(stderr, "Falha ao carregar modelo de obstáculo. Usando cubo.\n");
+	} else {
+		float alturaModelo = obstacleModel.maxY - obstacleModel.minY;
+		float alturaJogador = 2.0f;
+		escalaObstaculo = alturaJogador / alturaModelo;
+	}
 
     glutDisplayFunc(renderScene);
     glutIdleFunc(idleCB);
@@ -447,5 +459,8 @@ int main(int argc, char** argv) {
     glutMouseFunc(mouseCB);
 
     glutMainLoop();
+
+    freeModel(&obstacleModel);
+
     return 0;
 }
