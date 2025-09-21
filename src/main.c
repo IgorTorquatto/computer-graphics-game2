@@ -37,12 +37,18 @@ Obstacle obsPool[MAX_OBS];
 float worldSpeed = 12.0f; // units per second, increases with time
 float spawnTimer = 0.0f;
 float spawnInterval = 1.0f;
+float distanciaPercorrida = 0.0f;
+static const float fator = 0.1f;
+
 
 Model obstacleModel; // Modelo carregado para os obstáculos
 float escalaObstaculo = 1.0f; // escala para o obstáculo
 
 Model treeModel;
-float escalaArvoreDefault = 1.0f; // Ajuste o tamanho da árvore aqui
+float escalaArvoreDefault = 1.0f;
+
+Model roadModel;
+
 
 
 
@@ -176,7 +182,7 @@ void update(float dt) {
             float oby = obsPool[i].y + obsPool[i].h*0.5f;
             if (aabbCollision(player.x, player.y + ph*0.5f, player.z, pw, ph, pd,
                               obsPool[i].x, oby, obsPool[i].z, obsPool[i].w, obsPool[i].h, obsPool[i].d)) {
-                modoAtual = MODO_GAMEOVER;
+               // modoAtual = MODO_GAMEOVER;
             }
         }
     }
@@ -190,6 +196,7 @@ void update(float dt) {
         if(spawnInterval < 0.25f) spawnInterval = 0.25f;
     }
 
+	distanciaPercorrida += worldSpeed * dt * fator;
     updateTrees(dt, worldSpeed);
 
 }
@@ -210,7 +217,45 @@ void drawModel(const Model* model); // Prototype from model.h included
 
 /* Render scene: if menu -> call desenhaMenu (which does its own swapbuffers),
    otherwise draw 3D world (and swapbuffers here).
+
 */
+
+void drawDistance() {
+    int w = glutGet(GLUT_WINDOW_WIDTH);
+    int h = glutGet(GLUT_WINDOW_HEIGHT);
+
+    char buffer[50];
+    snprintf(buffer, sizeof(buffer), "%.1f m", distanciaPercorrida);
+
+    // Configurar matriz para texto 2D
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0, w, 0, h);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glDisable(GL_LIGHTING);
+    glColor3f(1.0f, 1.0f, 1.0f);
+
+    // Posição: 10 px do topo e 10 px da direita
+    glRasterPos2i(w - 10 * strlen(buffer), h - 20);
+
+    for(const char* c = buffer; *c; ++c) {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
+    }
+
+    glEnable(GL_LIGHTING);
+
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+}
+
+
 void renderScene() {
     if(modoAtual == MODO_MENU) {
         desenhaMenu();
@@ -230,7 +275,7 @@ void renderScene() {
               player.x, 1.0f, player.z - 8.0f,
               0.0f, 1.0f, 0.0f);
 
-    mostrarEixos();
+    //mostrarEixos();
 
     GLfloat light_position[] = { player.x + 5.0f, 10.0f, player.z + 5.0f, 1.0f };
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
@@ -252,6 +297,17 @@ void renderScene() {
         glEnd();
     }
     glEnable(GL_LIGHTING);
+
+    /*float tileLength = 10.0f;
+	int numTiles = 25;
+
+	for(int i = -1; i < numTiles - 1; i++) {
+		glPushMatrix();
+		glTranslatef(0.0f, 0.0f, i * tileLength);
+		glScalef(3.5f, 2.0f, 1.0f);
+		drawModel(&roadModel);
+		glPopMatrix();
+	}*/
 
     // Jogador (cubo azul)
     glColor3f(0.1f, 0.4f, 0.9f);
@@ -304,6 +360,8 @@ void renderScene() {
         glPopMatrix();
         glMatrixMode(GL_MODELVIEW);
     }
+
+    drawDistance();
 
     glutSwapBuffers();
 }
@@ -477,6 +535,11 @@ int main(int argc, char** argv) {
 			escalaArvoreDefault = 2.0f / alturaTree;
 		}
 	}
+
+	if(!loadOBJ("road_triangulated.obj", &roadModel)) {
+    fprintf(stderr, "Falha ao carregar modelo da estrada.\n");
+}
+
 
 	initTrees();
 

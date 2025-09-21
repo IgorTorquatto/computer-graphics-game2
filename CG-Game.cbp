@@ -63,6 +63,16 @@
 		<Unit filename="src/model.h">
 			<Option glob="744811448" />
 		</Unit>
+		<Unit filename="src/stb_image.h">
+			<Option glob="744811448" />
+		</Unit>
+		<Unit filename="src/tree.c">
+			<Option compilerVar="CC" />
+			<Option glob="744811448" />
+		</Unit>
+		<Unit filename="src/tree.h">
+			<Option glob="744811448" />
+		</Unit>
 		<Extensions>
 			<editor_config active="1" use_tabs="1" tab_indents="1" tab_width="4" indent="4" eol_mode="2" />
 		</Extensions>
