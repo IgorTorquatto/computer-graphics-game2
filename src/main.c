@@ -6,7 +6,8 @@
 #include <time.h>
 #include "estado.h"
 #include "menu.h"
-#include "model.h" // Incluído para carregar e desenhar o modelo OBJ
+#include "model.h"
+#include "tree.h"
 
 #define MAX_OBS 64
 #define LANE_X(i) (i * 2.5f) // lanes: 0,1,2 -> x = -2.5,0,2.5
@@ -39,6 +40,10 @@ float spawnInterval = 1.0f;
 
 Model obstacleModel; // Modelo carregado para os obstáculos
 float escalaObstaculo = 1.0f; // escala para o obstáculo
+
+Model treeModel;
+float escalaArvoreDefault = 1.0f; // Ajuste o tamanho da árvore aqui
+
 
 
 /* Prototypes */
@@ -184,6 +189,9 @@ void update(float dt) {
         spawnInterval = 0.8f - fmin(0.5f, worldSpeed * 0.01f);
         if(spawnInterval < 0.25f) spawnInterval = 0.25f;
     }
+
+    updateTrees(dt, worldSpeed);
+
 }
 
 /* Draw helper: scaled cube centered at x,y,z (y is base)
@@ -227,10 +235,11 @@ void renderScene() {
     GLfloat light_position[] = { player.x + 5.0f, 10.0f, player.z + 5.0f, 1.0f };
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 
+    // Ativa uso da cor atual para material (para que glColor3f funcione com iluminação)
     glEnable(GL_COLOR_MATERIAL);
     glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
 
-    // Chão
+    // Desenha o chão (sem iluminação para cor pura)
     glDisable(GL_LIGHTING);
     glColor3f(0.9f, 0.9f, 0.9f);
     for(int i = -100; i < 100; i++) {
@@ -249,27 +258,28 @@ void renderScene() {
     drawCube(player.x, player.y, player.z, player.width, player.height, player.depth);
 
     // Obstáculos usando modelo OBJ
-	glColor3f(0.9f, 0.2f, 0.2f);
-	for(int i=0; i<MAX_OBS; i++){
-		if(!obsPool[i].active) continue;
-		glPushMatrix();
-		glTranslatef(obsPool[i].x, obsPool[i].y, obsPool[i].z);
+    for(int i=0; i<MAX_OBS; i++){
+        if(!obsPool[i].active) continue;
+        glPushMatrix();
+        glTranslatef(obsPool[i].x, obsPool[i].y + 0.5f, obsPool[i].z);
 
-		// Ajuste para corrigir a posição vertical (suba ou desça conforme necessário)
-		float deslocamentoY = 0.50f; // exemplo: sobe 0.5 unidades acima do chão
-		glTranslatef(0.0f, deslocamentoY, 0.0f);
+        glRotatef(90.0f, 1.0f, 0.0f, 0.0f);   // Deita o modelo para ficar em pé
+        glRotatef(180.0f, 0.0f, 1.0f, 0.0f); // Gira para olhar para frente
+        glRotatef(180.0f, 0.0f, 0.0f, 1.0f); // Gira 180 graus no eixo Z para virar atrás
 
-		glRotatef(90.0f, 1.0f, 0.0f, 0.0f);   // Deita o modelo para ficar em pé
-		glRotatef(180.0f, 0.0f, 1.0f, 0.0f); // Gira para olhar para frente
-		glRotatef(180.0f, 0.0f, 0.0f, 1.0f); // Gira 180 graus no eixo Z para virar atrás
+        glScalef(escalaObstaculo, escalaObstaculo, escalaObstaculo);
 
-		glScalef(escalaObstaculo, escalaObstaculo, escalaObstaculo);
-		drawModel(&obstacleModel);
-		glPopMatrix();
-	}
+        // Define cor para o gato e desenha modelo com iluminação
+        glColor3f(0.7f, 0.2f, 0.2f);
+
+        drawModel(&obstacleModel);
+        glPopMatrix();
+    }
 
 
-    // Tela de Game Over
+	drawTrees();
+
+
     if(modoAtual == MODO_GAMEOVER) {
         int w = glutGet(GLUT_WINDOW_WIDTH), h = glutGet(GLUT_WINDOW_HEIGHT);
 
@@ -401,7 +411,6 @@ void reshape(int w, int h) {
     glMatrixMode(GL_MODELVIEW);
 }
 
-/* Initialization: lighting, depth test, etc. */
 void initGL() {
     glClearColor(0.12f, 0.12f, 0.15f, 1.0f);
     glEnable(GL_DEPTH_TEST);
@@ -411,6 +420,7 @@ void initGL() {
 
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
+
     GLfloat light_ambient[]  = { 0.2f, 0.2f, 0.2f, 1.0f };
     GLfloat light_diffuse[]  = { 0.9f, 0.9f, 0.9f, 1.0f };
     GLfloat light_specular[] = { 0.9f, 0.9f, 0.9f, 1.0f };
@@ -425,11 +435,17 @@ void initGL() {
     GLfloat mat_diffuse[]    = { 0.6f, 0.6f, 0.6f, 1.0f };
     GLfloat mat_specular[]   = { 0.8f, 0.8f, 0.8f, 1.0f };
     GLfloat high_shininess[] = { 50.0f };
+
     glMaterialfv(GL_FRONT, GL_AMBIENT,   mat_ambient);
     glMaterialfv(GL_FRONT, GL_DIFFUSE,   mat_diffuse);
     glMaterialfv(GL_FRONT, GL_SPECULAR,  mat_specular);
     glMaterialfv(GL_FRONT, GL_SHININESS, high_shininess);
+
+    // Ativa uso da cor atual para material ambiente e difuso
+    glEnable(GL_COLOR_MATERIAL);
+    glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
 }
+
 
 /* Main */
 int main(int argc, char** argv) {
@@ -443,13 +459,27 @@ int main(int argc, char** argv) {
     resetGame();
 
     // Carrega modelo de obstáculo OBJ
-    if(!loadOBJ("cat.obj", &obstacleModel)) {
-    fprintf(stderr, "Falha ao carregar modelo de obstáculo. Usando cubo.\n");
-	} else {
+	  if(!loadOBJ("cat.obj", &obstacleModel)) {
+		fprintf(stderr, "Falha ao carregar modelo de gato.\n");
+	}
+	else {
 		float alturaModelo = obstacleModel.maxY - obstacleModel.minY;
 		float alturaJogador = 2.0f;
 		escalaObstaculo = alturaJogador / alturaModelo;
 	}
+
+	if(!loadOBJ("tree.obj", &treeModel)) {
+		fprintf(stderr, "Falha ao carregar modelo de árvore.\n");
+	}
+	else {
+		float alturaTree = treeModel.maxY - treeModel.minY;
+		if (alturaTree > 0.1f) {
+			escalaArvoreDefault = 2.0f / alturaTree;
+		}
+	}
+
+	initTrees();
+
 
     glutDisplayFunc(renderScene);
     glutIdleFunc(idleCB);
@@ -461,6 +491,8 @@ int main(int argc, char** argv) {
     glutMainLoop();
 
     freeModel(&obstacleModel);
+    freeModel(&treeModel);
+
 
     return 0;
 }

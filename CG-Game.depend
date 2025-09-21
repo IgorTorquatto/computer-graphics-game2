@@ -401,7 +401,7 @@
 
 1758292415 c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\menu.h
 
-1758458159 source:c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\main.c
+1758469675 source:c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\main.c
 	<GL/glut.h>
 	<GL/glu.h>
 	<math.h>
@@ -411,15 +411,47 @@
 	"estado.h"
 	"menu.h"
 	"model.h"
+	"tree.h"
 
-1758458876 c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\model.h
+1758469693 c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\model.h
 
-1758458888 source:c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\model.c
+1758469103 source:c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\model.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
 	<GL/gl.h>
-	<GL/glu.h>
-	<GL/glut.h>
 	"model.h"
+
+1758467003 c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\tree.h
+
+1758467157 source:c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\tree.c
+	<stdlib.h>
+	<GL/glut.h>
+	"tree.h"
+	"model.h"
+
+1758469091 source:c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\texture.c
+	"stb_image.h"
+	"texture.h"
+	<stdio.h>
+
+1757275654 c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\stb_image.h
+	"stb_image.h"
+	<stdio.h>
+	<stdlib.h>
+	<stdarg.h>
+	<stddef.h>
+	<stdlib.h>
+	<string.h>
+	<limits.h>
+	<math.h>
+	<stdio.h>
+	<assert.h>
+	<stdint.h>
+	<emmintrin.h>
+	<intrin.h>
+	<arm_neon.h>
+
+1758469082 c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\texture.h
+	<GL/gl.h>
 
