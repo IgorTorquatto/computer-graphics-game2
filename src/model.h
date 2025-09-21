@@ -3,8 +3,10 @@
 
 typedef struct {
     int numVertices;
-    float* vertices; // vetor 3 floats por vértice (x, y, z)
-    float minY, maxY; // para calcular altura do modelo
+    float* vertices;    // x,y,z por vértice
+    int numFaces;
+    int* faces;        // índices dos vértices, 3 por face (triângulos)
+    float minY, maxY;  // altura para escala
 } Model;
 
 int loadOBJ(const char* filename, Model* model);
