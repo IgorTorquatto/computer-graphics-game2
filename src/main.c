@@ -12,6 +12,7 @@
 #define MAX_OBS 64
 #define LANE_X(i) (i * 2.5f) // lanes: 0,1,2 -> x = -2.5,0,2.5
 #define GRAVITY -30.0f
+#define MAX_COINS 128
 
 typedef enum { P_RUNNING, P_JUMPING, P_SLIDING } PlayerState;
 
@@ -49,6 +50,20 @@ float escalaArvoreDefault = 1.0f;
 
 Model roadModel;
 
+
+
+typedef struct {
+    int active;
+    int lane;
+    float x, y, z;
+    float w, h, d;
+    float angle; // rotação estética opcional
+} Coin;
+
+Coin coinPool[MAX_COINS];
+int coinCount = 0;
+float coinSpawnTimer = 0.0f;
+float coinSpawnInterval = 0.45f; // moedas mais frequentes que obstáculos
 
 
 
@@ -129,7 +144,12 @@ void resetGame() {
     worldSpeed = 12.0f;
     spawnTimer = 0.0f;
     spawnInterval = 1.0f;
+    for(int i=0;i<MAX_COINS;i++){ coinPool[i].active = 0; }
+    coinCount = 0;
+    coinSpawnTimer = 0.0f;
+    coinSpawnInterval = 0.45f;
 }
+
 
 /* Spawn obstacle in a free pool slot */
 void spawnObstacle() {
@@ -145,6 +165,95 @@ void spawnObstacle() {
         }
     }
 }
+
+void spawnCoin() {
+    for(int i=0;i<MAX_COINS;i++){
+        if(!coinPool[i].active){
+            coinPool[i].active = 1;
+            coinPool[i].lane = rand()%3;
+            coinPool[i].x = LANE_X(coinPool[i].lane);
+            coinPool[i].y = 0.0f;
+            coinPool[i].z = -40.0f - (rand()%20);
+            coinPool[i].w = 0.6f; coinPool[i].h = 0.6f; coinPool[i].d = 0.2f; // moeda “fininha”
+            coinPool[i].angle = (float)(rand()%360);
+            return;
+        }
+    }
+}
+
+void drawCoins3D() {
+    glColor3f(1.0f, 0.85f, 0.1f); // amarelo
+    for(int i=0;i<MAX_COINS;i++){
+        if(!coinPool[i].active) continue;
+        glPushMatrix();
+        glTranslatef(coinPool[i].x, coinPool[i].y + coinPool[i].h*0.5f, coinPool[i].z);
+        glRotatef(coinPool[i].angle, 0.0f, 1.0f, 0.0f); // giro em Y
+        glScalef(coinPool[i].w, coinPool[i].h, coinPool[i].d);
+        glutSolidCube(1.0f);
+        glPopMatrix();
+    }
+}
+
+
+void updateCoins(float dt) {
+    for(int i=0;i<MAX_COINS;i++){
+        if(!coinPool[i].active) continue;
+        coinPool[i].z += worldSpeed * dt;
+        coinPool[i].angle += 180.0f * dt; // giro estético
+        if(coinPool[i].z > 10.0f) {
+            coinPool[i].active = 0;
+            continue;
+        }
+        // AABB: caixas centradas como no teste de obstáculos
+        float ph = player.height, pw = player.width, pd = player.depth;
+        float coinCenterY = coinPool[i].y + coinPool[i].h * 0.5f;
+        if (aabbCollision(
+                player.x, player.y + ph*0.5f, player.z, pw, ph, pd,
+                coinPool[i].x, coinCenterY, coinPool[i].z, coinPool[i].w, coinPool[i].h, coinPool[i].d)) {
+            coinPool[i].active = 0;
+            coinCount++;
+        }
+    }
+}
+void drawCoinsHUD() {
+    int w = glutGet(GLUT_WINDOW_WIDTH);
+    int h = glutGet(GLUT_WINDOW_HEIGHT);
+
+    char buffer[64];
+    snprintf(buffer, sizeof(buffer), "Moedas: %d", coinCount);
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0, w, 0, h); // 2D em pixels
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glDisable(GL_LIGHTING);
+    glDisable(GL_DEPTH_TEST); // garante overlay limpo no HUD
+
+    glColor3f(1.0f, 1.0f, 0.0f); // amarelo para diferenciar do texto da distância
+
+    // Posicionar alguns pixels abaixo do texto da distância
+    // drawDistance usa (w - 10*strlen, h - 20); aqui, desce ~24 px
+    int px = w - 10 * (int)strlen(buffer);
+    int py = h - 44;
+    glRasterPos2i(px, py);
+    for(const char* c = buffer; *c; ++c) {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
+    }
+
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_LIGHTING);
+
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+}
+
 
 /* AABB collision test (centered boxes) */
 int aabbCollision(float ax, float ay, float az, float aw, float ah, float ad,
@@ -196,14 +305,23 @@ void update(float dt) {
         if(spawnInterval < 0.25f) spawnInterval = 0.25f;
     }
 
+     coinSpawnTimer += dt;
+    if(coinSpawnTimer >= coinSpawnInterval) {
+        coinSpawnTimer = 0.0f;
+        spawnCoin();
+        // Pode variar com a velocidade do mundo, semelhante aos obstáculos
+        float minInt = 0.25f;
+        coinSpawnInterval = 0.45f - fminf(0.2f, worldSpeed * 0.005f);
+        if(coinSpawnInterval < minInt) coinSpawnInterval = minInt;
+    }
+
 	distanciaPercorrida += worldSpeed * dt * fator;
     updateTrees(dt, worldSpeed);
+    // atualizar moedas
+    updateCoins(dt);
 
 }
 
-/* Draw helper: scaled cube centered at x,y,z (y is base)
-   We translate to (x, y + sy*0.5f, z) before scaling cube(1).
-*/
 void drawCube(float x, float y, float z, float sx, float sy, float sz) {
     glPushMatrix();
     glTranslatef(x, y + sy * 0.5f, z);
@@ -212,13 +330,8 @@ void drawCube(float x, float y, float z, float sx, float sy, float sz) {
     glPopMatrix();
 }
 
-/* Draw the loaded OBJ model as points (simple) */
-void drawModel(const Model* model); // Prototype from model.h included
+void drawModel(const Model* model);
 
-/* Render scene: if menu -> call desenhaMenu (which does its own swapbuffers),
-   otherwise draw 3D world (and swapbuffers here).
-
-*/
 
 void drawDistance() {
     int w = glutGet(GLUT_WINDOW_WIDTH);
@@ -298,18 +411,7 @@ void renderScene() {
     }
     glEnable(GL_LIGHTING);
 
-    /*float tileLength = 10.0f;
-	int numTiles = 25;
-
-	for(int i = -1; i < numTiles - 1; i++) {
-		glPushMatrix();
-		glTranslatef(0.0f, 0.0f, i * tileLength);
-		glScalef(3.5f, 2.0f, 1.0f);
-		drawModel(&roadModel);
-		glPopMatrix();
-	}*/
-
-    // Jogador (cubo azul)
+    // Jogador
     glColor3f(0.1f, 0.4f, 0.9f);
     drawCube(player.x, player.y, player.z, player.width, player.height, player.depth);
 
@@ -325,14 +427,14 @@ void renderScene() {
 
         glScalef(escalaObstaculo, escalaObstaculo, escalaObstaculo);
 
-        // Define cor para o gato e desenha modelo com iluminação
+        // gato
         glColor3f(0.7f, 0.2f, 0.2f);
 
         drawModel(&obstacleModel);
         glPopMatrix();
     }
 
-
+	drawCoins3D();
 	drawTrees();
 
 
@@ -362,6 +464,7 @@ void renderScene() {
     }
 
     drawDistance();
+    drawCoinsHUD();
 
     glutSwapBuffers();
 }
@@ -516,15 +619,6 @@ int main(int argc, char** argv) {
     initGL();
     resetGame();
 
-    // Carrega modelo de obstáculo OBJ
-	  if(!loadOBJ("cat.obj", &obstacleModel)) {
-		fprintf(stderr, "Falha ao carregar modelo de gato.\n");
-	}
-	else {
-		float alturaModelo = obstacleModel.maxY - obstacleModel.minY;
-		float alturaJogador = 2.0f;
-		escalaObstaculo = alturaJogador / alturaModelo;
-	}
 
 	if(!loadOBJ("tree.obj", &treeModel)) {
 		fprintf(stderr, "Falha ao carregar modelo de árvore.\n");
@@ -535,10 +629,6 @@ int main(int argc, char** argv) {
 			escalaArvoreDefault = 2.0f / alturaTree;
 		}
 	}
-
-	if(!loadOBJ("road_triangulated.obj", &roadModel)) {
-    fprintf(stderr, "Falha ao carregar modelo da estrada.\n");
-}
 
 
 	initTrees();
@@ -553,7 +643,6 @@ int main(int argc, char** argv) {
 
     glutMainLoop();
 
-    freeModel(&obstacleModel);
     freeModel(&treeModel);
 
 
