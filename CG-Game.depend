@@ -401,7 +401,7 @@
 
 1758292415 c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\menu.h
 
-1758477089 source:c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\main.c
+1758482949 source:c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\main.c
 	<GL/glut.h>
 	<GL/glu.h>
 	<math.h>
@@ -415,7 +415,7 @@
 
 1758469693 c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\model.h
 
-1758469704 source:c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\model.c
+1758481638 source:c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\model.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
@@ -424,7 +424,7 @@
 
 1758467003 c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\tree.h
 
-1758467157 source:c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\tree.c
+1758481634 source:c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\tree.c
 	<stdlib.h>
 	<GL/glut.h>
 	"tree.h"
