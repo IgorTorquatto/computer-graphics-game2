@@ -7,7 +7,7 @@
 #define LARGURA_BOTAO 240
 #define ALTURA_BOTAO 60
 
-extern void resetGame(); // função definida em main.c
+extern void resetGame(); // funï¿½ï¿½o definida em main.c
 
 static void desenhaBotaoCoord(int x, int y, int largura, int altura, const char* texto) {
     // fundo azul
@@ -24,7 +24,7 @@ static void desenhaBotaoCoord(int x, int y, int largura, int altura, const char*
     int len = 0;
     const char* p;
     for (p = texto; *p; ++p) ++len;
-    float approxCharW = 9.0f; // aproximação para GLUT_BITMAP_HELVETICA_18
+    float approxCharW = 9.0f; // aproximaï¿½ï¿½o para GLUT_BITMAP_HELVETICA_18
     float textWidth = len * approxCharW;
     float rx = x + (largura - textWidth) * 0.5f;
     float ry = y + (altura - 18.0f) * 0.5f + 4.0f;
@@ -32,7 +32,7 @@ static void desenhaBotaoCoord(int x, int y, int largura, int altura, const char*
     for (p = texto; *p; ++p) glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *p);
 }
 
-/* desenha menu (usa projeção ortográfica temporária) */
+/* desenha menu (usa projeï¿½ï¿½o ortogrï¿½fica temporï¿½ria) */
 void desenhaMenu() {
     // limpa
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -40,12 +40,12 @@ void desenhaMenu() {
     int ww = glutGet(GLUT_WINDOW_WIDTH);
     int wh = glutGet(GLUT_WINDOW_HEIGHT);
 
-    // Posições centralizadas
+    // Posiï¿½ï¿½es centralizadas
     int bx = (ww - LARGURA_BOTAO) / 2;
     int by_play = wh/2 + 40;
     int by_exit = wh/2 - 40;
 
-    // Projeção 2D temporária
+    // Projeï¿½ï¿½o 2D temporï¿½ria
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
@@ -55,7 +55,7 @@ void desenhaMenu() {
     glPushMatrix();
     glLoadIdentity();
 
-    // Título simples
+    // Tï¿½tulo simples
     glColor3f(1,1,1);
     const char *title = "Simple 3D Runner";
     float titleX = (ww - (int)strlen(title)*10) * 0.5f;
