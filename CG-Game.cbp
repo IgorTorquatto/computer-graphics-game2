@@ -63,6 +63,13 @@
 		<Unit filename="src/model.h">
 			<Option glob="744811448" />
 		</Unit>
+		<Unit filename="src/player.c">
+			<Option compilerVar="CC" />
+			<Option glob="744811448" />
+		</Unit>
+		<Unit filename="src/player.h">
+			<Option glob="744811448" />
+		</Unit>
 		<Unit filename="src/stb_image.h">
 			<Option glob="744811448" />
 		</Unit>

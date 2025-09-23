@@ -401,10 +401,9 @@
 
 1758292415 c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\menu.h
 
-1758482949 source:c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\main.c
+1758669879 source:c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\main.c
 	<GL/glut.h>
 	<GL/glu.h>
-	<math.h>
 	<stdio.h>
 	<stdlib.h>
 	<time.h>
@@ -412,6 +411,10 @@
 	"menu.h"
 	"model.h"
 	"tree.h"
+	"player.h"
+	"coin.h"
+	"hud.h"
+	<math.h>
 
 1758469693 c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\model.h
 
@@ -454,4 +457,29 @@
 
 1758469082 c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\texture.h
 	<GL/gl.h>
+
+1758670258 source:c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\coin.c
+	"coin.h"
+	"player.h"
+	<GL/glut.h>
+	<stdlib.h>
+	<string.h>
+	<stdio.h>
+	<math.h>
+
+1758670266 c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\coin.h
+
+1758670016 c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\player.h
+
+1758669957 source:c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\hud.c
+	"hud.h"
+	<GL/glut.h>
+	<string.h>
+	<stdio.h>
+
+1758669149 c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\hud.h
+
+1758670154 source:c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\player.c
+	"player.h"
+	<GL/glut.h>
 
