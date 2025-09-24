@@ -56,7 +56,6 @@ void drawTrees() {
 
         glPushMatrix();
         glTranslatef(treesPool[i].x, treesPool[i].y, treesPool[i].z);
-        // Caso o modelo precise estar de pé, ajuste rotações iguais ao gato, se necessário:
         // glRotatef(angulo, eixoX, eixoY, eixoZ);
 
         glScalef(treesPool[i].escala, treesPool[i].escala, treesPool[i].escala);

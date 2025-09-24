@@ -22,6 +22,9 @@ static const float fator = 0.1f;
 Model treeModel;
 float escalaArvoreDefault = 1.0f;
 
+extern Model rockModel;
+extern Model logModel;
+
 void mostrarEixos(){
     glDisable(GL_LIGHTING);
     glDisable(GL_DEPTH_TEST);
@@ -71,7 +74,7 @@ void mostrarEixos(){
     glEnable(GL_LIGHTING);
 }
 
-// Colis�o AABB (mantida como estava)
+// Colisão AABB (mantida como antes)
 int aabbCollision(float ax, float ay, float az, float aw, float ah, float ad,
                   float bx, float by, float bz, float bw, float bh, float bd) {
     if (fabs(ax - bx) * 2.0f < (aw + bw) &&
@@ -82,7 +85,8 @@ int aabbCollision(float ax, float ay, float az, float aw, float ah, float ad,
 
 void resetGame() {
     initPlayer(&player);
-    initObstacles();         // Inicializa obst�culos
+    initObstacleModels();
+    initObstacles();
     worldSpeed = 12.0f;
     distanciaPercorrida = 0.0f;
     initCoins();
@@ -95,10 +99,8 @@ void update(float dt) {
 
     updatePlayer(&player, dt);
 
-    // Atualiza obst�culos e gera novos spawn dentro do m�dulo
     obstacleUpdate(dt);
 
-    // Colis�o com obst�culos (checagem dentro do main)
     Obstacle* obstacles = getObstacles();
     int maxObs = getMaxObstacles();
 
@@ -113,7 +115,6 @@ void update(float dt) {
         float obstDepth = obstacles[i].d;
         float obstY = obstacles[i].y + obstHeight * 0.5f;
 
-        // Verifica colis�o AABB
         if (aabbCollision(
             player.x, player.y + ph * 0.5f, player.z, pw, ph, pd,
             obstCenterX, obstY, obstacles[i].z, obstWidth, obstHeight, obstDepth)
@@ -125,7 +126,6 @@ void update(float dt) {
     distanciaPercorrida += worldSpeed * dt * fator;
 
     updateTrees(dt, worldSpeed);
-
     updateCoins(dt);
 }
 
@@ -155,7 +155,6 @@ void renderScene() {
 
     glDisable(GL_LIGHTING);
     glColor3f(0.9f, 0.9f, 0.9f);
-    // Desenha ch�o
     for(int i = -100; i < 100; i++) {
         float zpos = i * 5.0f;
         glBegin(GL_QUADS);
@@ -167,7 +166,6 @@ void renderScene() {
     }
     glEnable(GL_LIGHTING);
 
-    // Desenha jogador
     drawPlayer(&player);
     drawObstacles();
     drawCoins3D();
@@ -304,6 +302,8 @@ int main(int argc, char** argv) {
     glutMainLoop();
 
     freeModel(&treeModel);
+    freeModel(&rockModel);
+    freeModel(&logModel);
 
     return 0;
 }
