@@ -11,6 +11,7 @@
 #include "coin.h"
 #include "hud.h"
 #include <math.h>
+#include "obstacle.h"
 
 Player player;
 
@@ -81,6 +82,7 @@ int aabbCollision(float ax, float ay, float az, float aw, float ah, float ad,
 
 void resetGame() {
     initPlayer(&player);
+    initObstacles();         // Inicializa obstáculos
     worldSpeed = 12.0f;
     distanciaPercorrida = 0.0f;
     initCoins();
@@ -93,7 +95,32 @@ void update(float dt) {
 
     updatePlayer(&player, dt);
 
-    // Aqui não há mais lógica de obstáculos nem colisão com eles
+    // Atualiza obstáculos e gera novos spawn dentro do módulo
+    obstacleUpdate(dt);
+
+    // Colisão com obstáculos (checagem dentro do main)
+    Obstacle* obstacles = getObstacles();
+    int maxObs = getMaxObstacles();
+
+    for(int i = 0; i < maxObs; i++) {
+        if(!obstacles[i].active) continue;
+
+        float ph = player.height, pw = player.width, pd = player.depth;
+
+        float obstCenterX = obstacles[i].x;
+        float obstWidth = obstacles[i].w;
+        float obstHeight = obstacles[i].h;
+        float obstDepth = obstacles[i].d;
+        float obstY = obstacles[i].y + obstHeight * 0.5f;
+
+        // Verifica colisão AABB
+        if (aabbCollision(
+            player.x, player.y + ph * 0.5f, player.z, pw, ph, pd,
+            obstCenterX, obstY, obstacles[i].z, obstWidth, obstHeight, obstDepth)
+        ) {
+            modoAtual = MODO_GAMEOVER;
+        }
+    }
 
     distanciaPercorrida += worldSpeed * dt * fator;
 
@@ -142,9 +169,7 @@ void renderScene() {
 
     // Desenha jogador
     drawPlayer(&player);
-
-    // Não desenha obstáculos pois eles foram removidos daqui
-
+    drawObstacles();
     drawCoins3D();
     drawTrees();
 

@@ -401,7 +401,7 @@
 
 1758292415 c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\menu.h
 
-1758669879 source:c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\main.c
+1758672119 source:c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\main.c
 	<GL/glut.h>
 	<GL/glu.h>
 	<stdio.h>
@@ -415,6 +415,7 @@
 	"coin.h"
 	"hud.h"
 	<math.h>
+	"obstacle.h"
 
 1758469693 c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\model.h
 
@@ -482,4 +483,6 @@
 1758670154 source:c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\player.c
 	"player.h"
 	<GL/glut.h>
+
+1758672190 c:\users\cicer\downloads\[planejamento] ufca\[ufca] 2025.1\computação gráfica\jogo\computer-graphics-game2\src\obstacle.h
 
