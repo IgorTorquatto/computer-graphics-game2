@@ -12,7 +12,7 @@
 Coin coinPool[MAX_COINS];
 static int coinCount = 0;
 static float coinSpawnTimer = 0.0f;
-static float coinSpawnInterval = 0.45f;
+static float coinSpawnInterval = 1.0f;
 extern float worldSpeed; // declarado em main.c ou game.c para velocidade global
 extern Player player;
 
@@ -83,8 +83,8 @@ void updateCoins(float dt) {
         coinSpawnTimer = 0.0f;
         spawnCoin();
         /* Intervalo diminui conforme velocidade do jogo */
-        float minInt = 0.25f;
-        coinSpawnInterval -= worldSpeed * 0.005f;
+        float minInt = 0.7f;
+        coinSpawnInterval = 1.0f - fminf(0.4f, worldSpeed * 0.005f);
         if(coinSpawnInterval < minInt) coinSpawnInterval = minInt;
     }
 }
