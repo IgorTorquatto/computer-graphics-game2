@@ -35,6 +35,15 @@
 		<UnitsGlob directory="src" wildcard="*" recursive="1" id="744811448" addToProject="1">
 			<Option target="Debug" />
 		</UnitsGlob>
+		<Unit filename="src/coin.c">
+			<Option compilerVar="CC" />
+			<Option glob="744811448" />
+			<Option target="Debug" />
+		</Unit>
+		<Unit filename="src/coin.h">
+			<Option glob="744811448" />
+			<Option target="Debug" />
+		</Unit>
 		<Unit filename="src/estado.c">
 			<Option compilerVar="CC" />
 			<Option glob="744811448" />
@@ -42,6 +51,15 @@
 		</Unit>
 		<Unit filename="src/estado.h">
 			<Option glob="744811448" />
+		</Unit>
+		<Unit filename="src/hud.c">
+			<Option compilerVar="CC" />
+			<Option glob="744811448" />
+			<Option target="Debug" />
+		</Unit>
+		<Unit filename="src/hud.h">
+			<Option glob="744811448" />
+			<Option target="Debug" />
 		</Unit>
 		<Unit filename="src/main.c">
 			<Option compilerVar="CC" />
@@ -59,26 +77,42 @@
 		<Unit filename="src/model.c">
 			<Option compilerVar="CC" />
 			<Option glob="744811448" />
+			<Option target="Debug" />
 		</Unit>
 		<Unit filename="src/model.h">
 			<Option glob="744811448" />
+			<Option target="Debug" />
+		</Unit>
+		<Unit filename="src/obstacle.c">
+			<Option compilerVar="CC" />
+			<Option glob="744811448" />
+			<Option target="Debug" />
+		</Unit>
+		<Unit filename="src/obstacle.h">
+			<Option glob="744811448" />
+			<Option target="Debug" />
 		</Unit>
 		<Unit filename="src/player.c">
 			<Option compilerVar="CC" />
 			<Option glob="744811448" />
+			<Option target="Debug" />
 		</Unit>
 		<Unit filename="src/player.h">
 			<Option glob="744811448" />
+			<Option target="Debug" />
 		</Unit>
 		<Unit filename="src/stb_image.h">
 			<Option glob="744811448" />
+			<Option target="Debug" />
 		</Unit>
 		<Unit filename="src/tree.c">
 			<Option compilerVar="CC" />
 			<Option glob="744811448" />
+			<Option target="Debug" />
 		</Unit>
 		<Unit filename="src/tree.h">
 			<Option glob="744811448" />
+			<Option target="Debug" />
 		</Unit>
 		<Extensions>
 			<editor_config active="1" use_tabs="1" tab_indents="1" tab_width="4" indent="4" eol_mode="2" />

@@ -71,7 +71,7 @@ void mostrarEixos(){
     glEnable(GL_LIGHTING);
 }
 
-// Colisão AABB (mantida como estava)
+// Colisï¿½o AABB (mantida como estava)
 int aabbCollision(float ax, float ay, float az, float aw, float ah, float ad,
                   float bx, float by, float bz, float bw, float bh, float bd) {
     if (fabs(ax - bx) * 2.0f < (aw + bw) &&
@@ -82,7 +82,7 @@ int aabbCollision(float ax, float ay, float az, float aw, float ah, float ad,
 
 void resetGame() {
     initPlayer(&player);
-    initObstacles();         // Inicializa obstáculos
+    initObstacles();         // Inicializa obstï¿½culos
     worldSpeed = 12.0f;
     distanciaPercorrida = 0.0f;
     initCoins();
@@ -95,10 +95,10 @@ void update(float dt) {
 
     updatePlayer(&player, dt);
 
-    // Atualiza obstáculos e gera novos spawn dentro do módulo
+    // Atualiza obstï¿½culos e gera novos spawn dentro do mï¿½dulo
     obstacleUpdate(dt);
 
-    // Colisão com obstáculos (checagem dentro do main)
+    // Colisï¿½o com obstï¿½culos (checagem dentro do main)
     Obstacle* obstacles = getObstacles();
     int maxObs = getMaxObstacles();
 
@@ -113,7 +113,7 @@ void update(float dt) {
         float obstDepth = obstacles[i].d;
         float obstY = obstacles[i].y + obstHeight * 0.5f;
 
-        // Verifica colisão AABB
+        // Verifica colisï¿½o AABB
         if (aabbCollision(
             player.x, player.y + ph * 0.5f, player.z, pw, ph, pd,
             obstCenterX, obstY, obstacles[i].z, obstWidth, obstHeight, obstDepth)
@@ -155,7 +155,7 @@ void renderScene() {
 
     glDisable(GL_LIGHTING);
     glColor3f(0.9f, 0.9f, 0.9f);
-    // Desenha chão
+    // Desenha chï¿½o
     for(int i = -100; i < 100; i++) {
         float zpos = i * 5.0f;
         glBegin(GL_QUADS);
@@ -279,12 +279,12 @@ int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
     glutInitWindowSize(1024, 600);
-    glutCreateWindow("Prot tipo");
+    glutCreateWindow("Prototipo");
     initGL();
     resetGame();
 
     if(!loadOBJ("tree.obj", &treeModel)) {
-        fprintf(stderr, "Falha ao carregar modelo de árvore.\n");
+        fprintf(stderr, "Falha ao carregar modelo de arvore.\n");
     } else {
         float alturaTree = treeModel.maxY - treeModel.minY;
         if (alturaTree > 0.1f) {
